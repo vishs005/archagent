@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-MASTRA_URL = "http://localhost:4111"
+MASTRA_URL = "https://archagent-1pjd.onrender.com"
 
 st.set_page_config(
     page_title="ArchAgent",

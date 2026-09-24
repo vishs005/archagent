@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 
 MASTRA_URL = "https://archagent-1pjd.onrender.com"
-
 st.set_page_config(
     page_title="ArchAgent",
     page_icon="🏗️",
@@ -125,7 +124,7 @@ if analyze and question:
 
             st.error(
                 "Unable to connect to ArchAgent. "
-                "Make sure the Mastra server is running on port 4111."
+                "Unable to connect to the ArchAgent backend."
             )
 
         except requests.exceptions.Timeout:

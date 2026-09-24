@@ -22,6 +22,8 @@
     "@mastra/libsql": "1.23.1",
     "@mastra/memory": "1.31.0",
     "@mastra/observability": "1.18.0",
+    "@pinecone-database/pinecone": "^9.0.0",
+    "ai": "^7.0.113",
     "zod": "^4.4.3"
   },
   "devDependencies": {

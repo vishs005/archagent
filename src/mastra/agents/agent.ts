@@ -1,77 +1,75 @@
-import { pathToFileURL } from 'node:url';
-import { Agent } from '@mastra/core/agent';
-import { TaskSignalProvider } from '@mastra/core/signals';
-import { askUserTool, webFetchTool, webSearchTool } from '@mastra/core/tools';
-import { LocalFilesystem, LocalSandbox, WORKSPACE_TOOLS, Workspace } from '@mastra/core/workspace';
-import { Memory } from '@mastra/memory';
-import { startScheduleTool, stopScheduleTool } from '../tools/schedule-tools';
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { webSearchTool } from "@mastra/core/tools";
 
-const workspacePath = 'workspace';
-
-const workspace = new Workspace({
-  id: 'agent-workspace',
-  name: 'Agent Workspace',
-  filesystem: new LocalFilesystem({
-    basePath: workspacePath,
-  }),
-  sandbox: new LocalSandbox({
-    workingDirectory: workspacePath,
-  }),
-  tools: {
-    [WORKSPACE_TOOLS.FILESYSTEM.WRITE_FILE]: {
-      requireReadBeforeWrite: true,
-    },
-    [WORKSPACE_TOOLS.FILESYSTEM.EDIT_FILE]: {
-      requireReadBeforeWrite: true,
-    },
-    [WORKSPACE_TOOLS.FILESYSTEM.DELETE]: {
-      requireApproval: true,
-    },
-  },
-});
+import { architectureKnowledgeTool } from "../tools/architecture-knowledge";
+import { saveAdrTool } from "../tools/save-adr";
 
 export const agent = new Agent({
-  id: 'agent',
-  name: 'Agent',
+  id: "arch-agent",
+
+  name: "ArchAgent",
+
   description:
-    'A general-purpose assistant that can research, manage tasks, work with local files, run approved commands, and create recurring schedules.',
-  metadata: {
-    suggestedPrompts: [
-      "What's the weather in Austin this weekend?",
-      "What's the SPCX stock price right now?",
-      'Build a Japanese sakura festival landing page.',
-    ],
-  },
-  instructions: `You are a friendly starter agent for exploring what Mastra can do. Help the user try useful capabilities, build small projects, answer current questions, and shape this harness into a starting point for future work.
+    "An AI architecture assistant that analyzes software architecture requirements and uses internal architecture knowledge to produce grounded recommendations.",
 
-Suggested prompts: Get the weather forecast for your city; Create a Japanese Sakura festival page; Tell me the SPCX stock price now, then every minute.
+  instructions: `
+You are ArchAgent, a software architecture decision assistant.
 
-When the user greets you or does not have a specific task, invite them to try the suggested prompts.
+Your goal is to help software engineers and architects analyze system
+requirements and make grounded architecture decisions.
 
-Ask concise questions when something is unclear or a good question could surface a useful insight.
+Follow this process:
 
-For local file changes, end with a plain-text URL using ${pathToFileURL(`${workspacePath}/`).href}; avoid Markdown links, localhost, /workspace, relative paths, and static-file servers.
+1. Understand the user's architecture problem and requirements.
+
+2. Research before making a recommendation.
+   - Use architecture_knowledge for internal architecture patterns,
+     engineering practices, and documented guidance.
+   - Use web_search when current, external, vendor-specific, or additional
+     information is needed.
+   - You may use both tools when appropriate.
+
+3. Analyze the evidence and compare reasonable architecture options.
+   Explain important tradeoffs, risks, and assumptions.
+
+4. Produce a recommended architecture. Clearly separate:
+   - Requirements
+   - Options considered
+   - Recommendation
+   - Tradeoffs
+   - Sources
+
+5. If the user asks to save the decision, create an Architecture Decision
+   Record (ADR) and use save_adr.
+   Never attempt to bypass the approval requirement for saving an ADR.
+
+If a research tool fails or returns insufficient information:
+- Try another appropriate research tool when possible.
+- Do not invent missing information.
+- Clearly tell the user when there is not enough evidence to make a
+  grounded recommendation.
+
+Do not modify or save anything unless the user requests it.
 `,
-  model: 'openai/gpt-5.6-terra',
+
+  model: "openai/gpt-5.6-terra",
+
   defaultOptions: {
-    maxSteps: 100,
-    autoResumeSuspendedTools: true,
+    maxSteps: 10,
   },
+
   memory: new Memory({
     options: {
       generateTitle: true,
-      observationalMemory: {
-        model: 'openai/gpt-5-mini',
-      },
     },
   }),
-  workspace,
+
   tools: {
-    ask_user: askUserTool,
-    start_schedule: startScheduleTool,
-    stop_schedule: stopScheduleTool,
-    web_fetch: webFetchTool,
+    architecture_knowledge: architectureKnowledgeTool,
     web_search: webSearchTool,
+    save_adr:saveAdrTool,
+
+
   },
-  signals: [new TaskSignalProvider()],
 });
